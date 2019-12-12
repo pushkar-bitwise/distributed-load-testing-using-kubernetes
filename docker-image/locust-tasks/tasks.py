@@ -32,7 +32,6 @@ rules_requests = read_rules_requests()
 
 class MetricsTaskSet(TaskSet):
 
-
     def on_start(self):
         self._deviceid = str(uuid.uuid4())
 
@@ -66,7 +65,10 @@ class MetricsTaskSet(TaskSet):
                         "out-identifier": "fact0"}}]))
             , headers=headers, name="Execute Rule")
 
-        print(response)
+        if response.status_code == 200:
+            print(response.json())
+        else:
+            print(response.status_code)
 
 
 class MetricsLocust(HttpLocust):

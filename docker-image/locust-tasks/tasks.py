@@ -16,24 +16,56 @@
 
 
 import uuid
-
+import random
 from datetime import datetime
 from locust import HttpLocust, TaskSet, task
 import json
 
 
+def read_rules_requests():
+    with open('/inputdata.json') as json_file:
+        return json.load(json_file)
+
+
+rules_requests = read_rules_requests()
+
+
 class MetricsTaskSet(TaskSet):
-    _deviceid = None
+
 
     def on_start(self):
         self._deviceid = str(uuid.uuid4())
 
     @task(1)
     def login(self):
-        headers = {'content-type': 'application/json', 'Authorization':'Basic YWRtaW46YWRtaW4='}
+        rule_req = random.choice(rules_requests)
+        headers = {'content-type': 'application/json', 'Authorization': 'Basic YWRtaW46YWRtaW4='}
         self.client.post(
-            '/rest/server/containers/instances/discover_pm_2.2.1', data= json.dumps({ "lookup": "DimsStatelessSession", "commands": [ { "insert": { "object": { "com.globalpayments.dims.rule.common.model.CaseDataInput": { "reasonCode" : "01", "gracePeriodFlag": "false", "salesDraftAttached": "false", "merchantDocumentsAttached": "true", "retrievalReqFulfilled": "true", "merchantCategoryCode": "5712", "creditIssued": "false", "previousRetrievalRequestPresent": "true", "creditInstance": 2, "salesInstance": 2, "acquirerName": "GPN", "previousReasonCode": "02", "caseStage" : "Chargeback", "stripOffMerchantFlag": "false" } }, "out-identifier": "fact0", "return-object":"true" } }, { "fire-all-rules": { "out-identifier": "rulesFired" } }, { "get-objects": { "out-identifier": "fact0" } } ] })
-,headers=headers,   name = "Execute Rule")
+            '/rest/server/containers/instances/discover_pm_2.2.1', data=json.dumps(
+                dict(lookup="DimsStatelessSession", commands=[{"insert": {"object": {
+                    "com.globalpayments.dims.rule.common.model.CaseDataInput": {
+                        "reasonCode": rule_req['reasonCode'],
+                        "gracePeriodFlag": rule_req['gracePeriodFlag'],
+                        "salesDraftAttached": rule_req['salesDraftAttached'],
+                        "merchantDocumentsAttached": rule_req['merchantDocumentsAttached'],
+                        "retrievalReqFulfilled": rule_req['retrievalReqFulfilled'],
+                        "merchantCategoryCode": rule_req['merchantCategoryCode'],
+                        "creditIssued": rule_req['creditIssued'],
+                        "previousRetrievalRequestPresent": rule_req['previousRetrievalRequestPresent'],
+                        "creditInstance": rule_req['creditInstance'],
+                        "salesInstance": rule_req['salesInstance'],
+                        "acquirerName": rule_req['acquirerName'],
+                        "previousReasonCode": rule_req['previousReasonCode'],
+                        "caseStage": rule_req['caseStage'],
+                        "stripOffMerchantFlag": rule_req['stripOffMerchantFlag']}},
+                    "out-identifier": "fact0",
+                    "return-object": "true"}},
+                    {"fire-all-rules": {
+                        "out-identifier": "rulesFired"}},
+                    {"get-objects": {
+                        "out-identifier": "fact0"}}]))
+            , headers=headers, name="Execute Rule")
+
 
 class MetricsLocust(HttpLocust):
     task_set = MetricsTaskSet

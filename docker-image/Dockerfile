@@ -22,6 +22,8 @@ ADD licenses /licenses
 # Add the external tasks directory into /tasks
 ADD locust-tasks /locust-tasks
 
+COPY inputdata.json /
+
 # Install the required dependencies via pip
 RUN pip install -r /locust-tasks/requirements.txt
 

@@ -19,6 +19,7 @@ import uuid
 
 from datetime import datetime
 from locust import HttpLocust, TaskSet, task
+import json
 
 
 class MetricsTaskSet(TaskSet):
@@ -29,14 +30,10 @@ class MetricsTaskSet(TaskSet):
 
     @task(1)
     def login(self):
+        headers = {'content-type': 'application/json', 'Authorization':'Basic YWRtaW46YWRtaW4='}
         self.client.post(
-            '/login', {"deviceid": self._deviceid})
-
-    @task(999)
-    def post_metrics(self):
-        self.client.post(
-            "/metrics", {"deviceid": self._deviceid, "timestamp": datetime.now()})
-
+            '/rest/server/containers/instances/discover_pm_2.2.1', data= json.dumps({ "lookup": "DimsStatelessSession", "commands": [ { "insert": { "object": { "com.globalpayments.dims.rule.common.model.CaseDataInput": { "reasonCode" : "01", "gracePeriodFlag": "false", "salesDraftAttached": "false", "merchantDocumentsAttached": "true", "retrievalReqFulfilled": "true", "merchantCategoryCode": "5712", "creditIssued": "false", "previousRetrievalRequestPresent": "true", "creditInstance": 2, "salesInstance": 2, "acquirerName": "GPN", "previousReasonCode": "02", "caseStage" : "Chargeback", "stripOffMerchantFlag": "false" } }, "out-identifier": "fact0", "return-object":"true" } }, { "fire-all-rules": { "out-identifier": "rulesFired" } }, { "get-objects": { "out-identifier": "fact0" } } ] })
+,headers=headers,   name = "Execute Rule")
 
 class MetricsLocust(HttpLocust):
     task_set = MetricsTaskSet

@@ -40,7 +40,7 @@ class MetricsTaskSet(TaskSet):
     def login(self):
         rule_req = random.choice(rules_requests)
         headers = {'content-type': 'application/json', 'Authorization': 'Basic YWRtaW46YWRtaW4='}
-        self.client.post(
+        response = self.client.post(
             '/rest/server/containers/instances/discover_pm_2.2.1', data=json.dumps(
                 dict(lookup="DimsStatelessSession", commands=[{"insert": {"object": {
                     "com.globalpayments.dims.rule.common.model.CaseDataInput": {
@@ -65,6 +65,8 @@ class MetricsTaskSet(TaskSet):
                     {"get-objects": {
                         "out-identifier": "fact0"}}]))
             , headers=headers, name="Execute Rule")
+
+        print(response)
 
 
 class MetricsLocust(HttpLocust):
